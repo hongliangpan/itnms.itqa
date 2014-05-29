@@ -1,0 +1,133 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>itnms.itqa</groupId>
+    <artifactId>its-itqa</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>its-itqa Maven Webapp</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+
+        <webDeployPath>${project.build.directory}/deploy/itqa/war/adapter</webDeployPath>
+        <webDeployPath4Bmc>${project.build.directory}/deploy/itqa/war/bmc</webDeployPath4Bmc>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ruijie.its</groupId>
+            <artifactId>its-dev-core</artifactId>
+            <version>1.3.4-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.5</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.22</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.3.175</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <!-- <version>8.1.14.v20131031</version> -->
+                <version>8.0.4.v20111024</version>
+                <configuration>
+                    <useTestClasspath>true</useTestClasspath>
+                    
+                    <connectors>
+                        <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+                            <port>8090</port>
+                            <maxIdleTime>60000</maxIdleTime>
+                        </connector>
+                    </connectors>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <!-- copy第三方jar包 -->
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/deploy/itqa/3rd</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <excludeArtifactIds>mysql-connector-java,junit,mybatis,servlet-api,slf4j-api,slf4j-simple</excludeArtifactIds>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/deploy/itqa/app/business</outputDirectory>
+                    <excludes>
+                        <exclude>fping</exclude>
+                        <exclude>fping*.exe</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <configuration>
+                            <target name="copyWeb">
+                                <copydir dest="${webDeployPath" src="${basedir}/src/main/webapp"
+                                    ></copydir>
+                                
+                                <copydir dest="${webDeployPath}" src="${webStaticPath}" excludes="**/WEB-INF/web.xml"></copydir>
+
+                                <move todir="${project.build.directory}/deploy/itqa/app/business">
+                                    <fileset dir="${project.build.directory}/deploy/itqa/3rd/">
+                                        <include name="itqa-*.jar" />
+                                    </fileset>
+                                </move>
+                                <copy file="${basedir}/src/main/resources/fping.exe" tofile="${project.build.directory}/deploy/itqa/conf/fping.exe" />
+                               
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
